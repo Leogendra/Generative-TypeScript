@@ -1,0 +1,7 @@
+# Sys
+__pycache__/
+env/
+
+# Générés pendent l'entrainement
+entrainement*/
+typescript_files/
