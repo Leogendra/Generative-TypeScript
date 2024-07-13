@@ -5,3 +5,4 @@ env/
 # Générés pendent l'entrainement
 entrainement*/
 typescript_files/
+typescript_repos/
