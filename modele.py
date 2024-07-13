@@ -9,6 +9,8 @@ TYPESCRIPT_FOLDER = "typescript_files/"
 TRAINING_PATH = "entrainement/"
 
 
+
+
 def get_model():
     return TFGPT2LMHeadModel.from_pretrained("gpt2")
 
@@ -86,12 +88,6 @@ def train_model(input_ids, labels, epochs, batch_size):
     return model
 
 
-# def evaluate_model(model, tokenizer, input_text, max_length):
-#     input_ids = tokenizer.encode(input_text, return_tensors='tf')
-#     output = model.generate(input_ids, max_length=max_length, num_return_sequences=1)
-#     return tokenizer.decode(output[0], skip_special_tokens=True)
-
-
 def evaluate_model(model, tokenizer, input_text, max_length):
     input_ids = tokenizer.encode(input_text, return_tensors="tf")
     attention_mask = tf.ones_like(input_ids)
@@ -101,14 +97,12 @@ def evaluate_model(model, tokenizer, input_text, max_length):
         attention_mask=attention_mask,
         max_length=max_length,
         num_return_sequences=1,
-        pad_token_id=tokenizer.eos_token_id,
-        # do_sample=True,
-        # temperature=0.7,
-        # top_k=50,
-        # top_p=0.95,
+        pad_token_id=tokenizer.eos_token_id
     )
 
     return tokenizer.decode(output[0], skip_special_tokens=True)
+
+
 
 
 if __name__ == "__main__":
@@ -118,9 +112,8 @@ if __name__ == "__main__":
     batch_size=4
     maxFilesTraining = 1000
 
-    textToGenerate = "function add(x, y) {"
+    textToGenerate = "function test() {"
     maxTokenNumber = 100 # Comprend l'entree
-
 
     # Main
     create_folder(TRAINING_PATH)
@@ -142,5 +135,5 @@ if __name__ == "__main__":
     print(f"{BLUE}Évaluation du modèle...{RESET}")
     generatedText = evaluate_model(trained_model, tokenizer, textToGenerate, maxTokenNumber)
 
-    print(f"\n{YELLOW}Test d'évaluation du modèle :{RESET}")
+    print(f"\n{YELLOW}Test de génération du modèle :{RESET}")
     print(f"{textToGenerate}{GRAS}{generatedText[len(textToGenerate):]}{RESET}") # gras : texte généré
