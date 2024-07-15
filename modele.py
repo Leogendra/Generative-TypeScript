@@ -88,14 +88,14 @@ def train_model(input_ids, labels, epochs, batch_size):
     return model
 
 
-def evaluate_model(model, tokenizer, input_text, max_length):
-    input_ids = tokenizer.encode(input_text, return_tensors="tf")
+def evaluate_model(model, tokenizer, inputText, maxLength):
+    input_ids = tokenizer.encode(inputText, return_tensors="tf")
     attention_mask = tf.ones_like(input_ids)
 
     output = model.generate(
         input_ids,
         attention_mask=attention_mask,
-        max_length=max_length,
+        max_length=maxLength,
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id
     )
