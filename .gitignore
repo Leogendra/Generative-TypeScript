@@ -1,6 +1,7 @@
 # Sys
 __pycache__/
 env/
+node_modules/
 
 # Générés pendent l'entrainement
 entrainement*/
