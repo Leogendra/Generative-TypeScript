@@ -1,0 +1,2 @@
+function getDelaysFromConfig(accessor: (key: string) => any, type: 'general' | 'errorAtPosition' | 'warningAtPosition'): { announcement: number; sound: number } | undefined { announcement: number; sound: number } | undefined { announcement: number; sound: number } | undefined { announcement: number; sound: number } | undefined { announcement: number; sound: number } | undefined { announcement
+}
