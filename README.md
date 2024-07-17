@@ -1,6 +1,6 @@
-# Modèle de Génération de Code TypeScript à partir de GPT-2
+# Modèle de Génération de Code TypeScript
 
-Ce projet utilise un modèle GPT-2 pré-entraîné pour générer du code TypeScript à partir de fichiers TypeScript disponibles en public sur Github.
+Ce projet utilise un modèle GPT-2 pré-entraîné pour générer du code TypeScript à partir de fichiers TypeScript disponibles sur des projets public de Github.
 
 ## Installation
 
