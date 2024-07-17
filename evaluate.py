@@ -3,7 +3,7 @@ from keras.preprocessing.sequence import pad_sequences
 from transformers import GPT2Tokenizer, TFGPT2LMHeadModel
 from utils import *
 import numpy as np
-import os, json, re, subprocess
+import os, json, re, subprocess, random
 
 TRAINING_PATH = "entrainement/"
 TSC_PATH = os.path.abspath("node_modules/.bin/tsc.cmd")
@@ -139,6 +139,7 @@ def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
     evaluation_results = []
     
     allEvaluateFiles = os.listdir(inputPath)
+    random.shuffle(allEvaluateFiles)
     treatedFunctions = 0
     for file in allEvaluateFiles:
         with open(inputPath + file, "r") as file:
@@ -153,11 +154,13 @@ def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
                 continue
             if (len(function) < 10):
                 continue
+            if (len(function) > 500):
+                continue
 
             treatedFunctions += 1
             firstLine = "// only this function\n" + function.split("\n")[0].strip()
             print(f"{BLUE}Génération de la fonction {treatedFunctions}/{nbFiles}{RESET}", end="\r")
-            generatedFunction = generate(model, tokenizer, firstLine, maxLength)
+            generatedFunction = generate(model, tokenizer, firstLine, min(len(firstLine)//2, maxLength))
             cleanedGeneratedFunction = code_cleaner(generatedFunction)[0] # On récupère la première fonction générée
            
             tmpTsFile = os.path.join(TRAINING_PATH + "temp.ts")
@@ -198,7 +201,7 @@ if __name__ == "__main__":
 
     # Variables
     pathToEvaluateFiles = "typescript_files/"
-    nbFilesEvaluating = 50
+    nbFilesEvaluating = 10
     maxTokenNumber = 200 # Comprend l'entree
     # evaluation = "greedy"
     evaluation = "syntaxic"
