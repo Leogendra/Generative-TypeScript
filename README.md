@@ -31,3 +31,11 @@ pip install -r requirements.txt
 ### Génération de code
 
 Une fois le modèle entraîné, vous pouvez générer du code TypeScript en exécutant simplement `python modele.py`. Modifiez la variable textToGenerate pour générer du code à partir de cette chaîne de caractères.
+
+### Évaluation du modèle
+
+Pour évaluer les capacités du modèle entraîné, exécutez `python evaluation.py`. Le modèle générera du code TypeScript à partir de fichiers TypeScript réels et les comparera. Vous pouvez choisir quel type d'évaluation effectuer en modifiant la variable `evaluation` à la ligne 206/207 :
+- `evaluation = "greedy"` : Comparaison de la sortie du modèle avec le code réel en fonction de leur distance de Levenshtein.
+- `evaluation = "syntaxic"` : Exécution d'une analyse syntaxique sur le code généré pour vérifier sa validité. Veuillez à bien installer TypeScript sur votre machine pour cette évaluation à l'aide de `npm install typescript` (ou `npm install -g typescript` selon si un environnement virtuel est utilisé ou non).
+
+Vous povuez modifier le nombre de fonctions à évaluer en modifiant la variable `nbFilesEvaluating` à la ligne 204, ainsi que le nombre maximal de tokens à générer en modifiant la variable `maxTokenNumber` à la ligne 205.
