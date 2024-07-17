@@ -1,6 +1,6 @@
 # Modèle de Génération de Code TypeScript
 
-Ce projet utilise un modèle GPT-2 pré-entraîné pour générer du code TypeScript à partir de fichiers TypeScript disponibles sur des projets public de Github.
+Ce projet utilise un modèle GPT-2 pré-entraîné pour générer du code TypeScript à partir de fichiers TypeScript disponibles sur des projets publics de Github.
 
 ## Installation
 
@@ -21,7 +21,7 @@ pip install -r requirements.txt
 1. **Récupération des Données :**
    - Pour récupérer des repositories, lancez `python scraper.py`
    - Vous pouvez définir MAX_REPOS pour le nombre maximum de repos à récupérer, ces derniers se retrouveront dans `typescript_repos/`.
-   - Pour filtrer les repo et ne récupérer que les fichiers TypeScript, lancez `python cleaner.py`, les fichiers se retrouveront dans `typescript_files/`.
+   - Pour filtrer les repos et ne récupérer que les fichiers TypeScript, lancez `python cleaner.py`, les fichiers se retrouveront dans `typescript_files/`.
 
 2. **Entraînement :**
    - Exécutez `python modele.py` pour entraîner le modèle. Assurez-vous de spécifier le nombre maximum de fichiers à utiliser (`MAX_FILES`).

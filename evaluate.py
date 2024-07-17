@@ -137,9 +137,10 @@ def evaluate_model_greedy(model, tokenizer, inputPath, nbFiles, maxLength):
 def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
 
     evaluation_results = []
+    create_folder(TRAINING_PATH + "tmp/")
     
     allEvaluateFiles = os.listdir(inputPath)
-    random.shuffle(allEvaluateFiles)
+    # random.shuffle(allEvaluateFiles)
     treatedFunctions = 0
     for file in allEvaluateFiles:
         with open(inputPath + file, "r") as file:
@@ -163,7 +164,7 @@ def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
             generatedFunction = generate(model, tokenizer, firstLine, min(len(firstLine)//2, maxLength))
             cleanedGeneratedFunction = code_cleaner(generatedFunction)[0] # On récupère la première fonction générée
            
-            tmpTsFile = os.path.join(TRAINING_PATH + "temp.ts")
+            tmpTsFile = os.path.join(TRAINING_PATH + f"tmp/temp_{treatedFunctions}.ts")
             with open(tmpTsFile, "w") as file:
                 file.write(cleanedGeneratedFunction)
             
@@ -201,7 +202,7 @@ if __name__ == "__main__":
 
     # Variables
     pathToEvaluateFiles = "typescript_files/"
-    nbFilesEvaluating = 10
+    nbFilesEvaluating = 50
     maxTokenNumber = 200 # Comprend l'entree
     # evaluation = "greedy"
     evaluation = "syntaxic"
