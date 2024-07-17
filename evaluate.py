@@ -140,7 +140,7 @@ def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
     create_folder(TRAINING_PATH + "tmp/")
     
     allEvaluateFiles = os.listdir(inputPath)
-    # random.shuffle(allEvaluateFiles)
+    random.shuffle(allEvaluateFiles)
     treatedFunctions = 0
     for file in allEvaluateFiles:
         with open(inputPath + file, "r") as file:
@@ -180,7 +180,6 @@ def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
                         continue
                     else:
                         errors += 1
-                # print(f"{RED}{errors} erreurs dans la génération de la fonction {treatedFunctions}/{nbFiles} : {RESET}{result}")
 
             evaluation_results.append([errors, len(function), len(cleanedGeneratedFunction)])
 
