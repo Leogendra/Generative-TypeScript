@@ -3,9 +3,10 @@ from keras.preprocessing.sequence import pad_sequences
 from transformers import GPT2Tokenizer, TFGPT2LMHeadModel
 from utils import *
 import numpy as np
-import os, json, re
+import os, json, re, subprocess
 
 TRAINING_PATH = "entrainement/"
+TSC_PATH = os.path.abspath("node_modules/.bin/tsc.cmd")
 
 
 def get_model():
@@ -52,6 +53,11 @@ def code_cleaner(code):
                 functions.append(currentFunction.strip())
                 inFunction = False
                 currentFunction = ""
+
+    # ajouter des } si le code n'est pas terminé
+    if inFunction:
+        currentFunction += "}" * accoladesCount
+        functions.append(currentFunction.strip())
 
     return functions
 
@@ -116,16 +122,74 @@ def evaluate_model_greedy(model, tokenizer, inputPath, nbFiles, maxLength):
             firstLine = function.split("\n")[0]
             print(f"{BLUE}Génération de la fonction {treatedFunctions}/{nbFiles}{RESET}", end="\r")
             generatedFunction = generate(model, tokenizer, firstLine, maxLength)
-            distanceWithGenerated = distance_levenshtein(function[:len(generatedFunction)], generatedFunction) #On crop la fonction de base si jamais on a pas eu assez de tokens
+            distanceWithGenerated = distance_levenshtein(function[:len(generatedFunction)], generatedFunction) # On crop la fonction de base si jamais on a pas eu assez de tokens
             evaluation_results.append([distanceWithGenerated, len(function), len(generatedFunction)])
 
         if (treatedFunctions >= nbFiles):
                     break
         
-    with open(TRAINING_PATH + "evaluation_results.json", "w") as file:
+    with open(TRAINING_PATH + "evaluation_greedy_results.json", "w") as file:
         json.dump(evaluation_results, file)
 
     return [distances/lenGenerated for distances, _, lenGenerated in evaluation_results]
+
+
+def evaluate_model_syntaxic(model, tokenizer, inputPath, nbFiles, maxLength):
+
+    evaluation_results = []
+    
+    allEvaluateFiles = os.listdir(inputPath)
+    treatedFunctions = 0
+    for file in allEvaluateFiles:
+        with open(inputPath + file, "r") as file:
+            fileText = file.read()
+            cleanedCode = code_cleaner(fileText)
+
+        # on récupère toutes les fonctions du fichier et on les génère avec notre modèle
+        for function in cleanedCode:
+            if (treatedFunctions >= nbFiles):
+                break
+            if ("foo" in function):
+                continue
+            if (len(function) < 10):
+                continue
+
+            treatedFunctions += 1
+            firstLine = "// only this function\n" + function.split("\n")[0].strip()
+            print(f"{BLUE}Génération de la fonction {treatedFunctions}/{nbFiles}{RESET}", end="\r")
+            generatedFunction = generate(model, tokenizer, firstLine, maxLength)
+            cleanedGeneratedFunction = code_cleaner(generatedFunction)[0] # On récupère la première fonction générée
+           
+            tmpTsFile = os.path.join(TRAINING_PATH + "temp.ts")
+            with open(tmpTsFile, "w") as file:
+                file.write(cleanedGeneratedFunction)
+            
+            # On utilise tsc pour vérifier la syntaxe et la sémantique du code
+            result = subprocess.run([TSC_PATH, '--noEmit', tmpTsFile], capture_output=True, text=True)
+            
+            # On compte si y a une erreur ou plus
+            errors = 0
+            if result.returncode != 0: 
+                all_errors = (" " + result.stdout).split("entrainement/temp.ts(")
+                for error in all_errors:
+                    if (len(error) < 5) or (error.startswith("1,")):
+                        continue
+                    else:
+                        errors += 1
+                # print(f"{RED}{errors} erreurs dans la génération de la fonction {treatedFunctions}/{nbFiles} : {RESET}{result}")
+
+            evaluation_results.append([errors, len(function), len(cleanedGeneratedFunction)])
+
+        if (treatedFunctions >= nbFiles):
+                    break
+        
+    # On sauvagarde les résultats
+    with open(TRAINING_PATH + "evaluation_syntaxic_results.json", "w") as file:
+        json.dump(evaluation_results, file)
+
+    return [errors for errors, _, _ in evaluation_results]
+
+    
 
 
 
@@ -134,8 +198,10 @@ if __name__ == "__main__":
 
     # Variables
     pathToEvaluateFiles = "typescript_files/"
-    nbFilesEvaluating = 10
-    maxTokenNumber = 100 # Comprend l'entree
+    nbFilesEvaluating = 50
+    maxTokenNumber = 200 # Comprend l'entree
+    # evaluation = "greedy"
+    evaluation = "syntaxic"
 
     # Main
     create_folder(TRAINING_PATH)
@@ -151,15 +217,30 @@ if __name__ == "__main__":
     else:
         print(f"{RED}Le modèle n'est pas présent dans entrainement/{RESET}")
 
-    print(f"{BLUE}Évaluation des performances du modèle...{RESET}")
-    evaluate_results = evaluate_model_greedy(trained_model, tokenizer, pathToEvaluateFiles, nbFilesEvaluating, maxTokenNumber)
-    moyenne = np.mean(evaluate_results)
-    equartType = np.std(evaluate_results)
+    print(f"{BLUE}Évaluation des performances du modèle avec la fonction {evaluation}...{RESET}")
 
-    print(f"\n{YELLOW}Test d'évaluation du modèle :{RESET}")
-    print(f"  Nombre de fichiers évalués : {nbFilesEvaluating}")
-    print(f"  Nombre de tokens maximum : {maxTokenNumber}")
-    print(f"  Distance moyenne : {moyenne}")
-    print(f"  Ecart-type : {equartType}")
-    print(f"  Distance minimale : {min(evaluate_results)}")
-    print(f"  Distance maximale : {max(evaluate_results)}")
+    if evaluation == "greedy":
+        evaluate_results = evaluate_model_greedy(trained_model, tokenizer, pathToEvaluateFiles, nbFilesEvaluating, maxTokenNumber)
+        moyenne = np.mean(evaluate_results)
+        equartType = np.std(evaluate_results)
+
+        print(f"\n{YELLOW}Test d'évaluation du modèle :{RESET}")
+        print(f"  Nombre de fonctions évaluées : {nbFilesEvaluating}")
+        print(f"  Nombre de tokens maximum : {maxTokenNumber}")
+        print(f"  Distance moyenne : {moyenne}")
+        print(f"  Ecart-type : {equartType}")
+        print(f"  Distance minimale : {min(evaluate_results)}")
+        print(f"  Distance maximale : {max(evaluate_results)}")
+
+    elif (evaluation == "syntaxic"):
+        evaluate_results = evaluate_model_syntaxic(trained_model, tokenizer, pathToEvaluateFiles, nbFilesEvaluating, maxTokenNumber)
+        moyenne = np.mean(evaluate_results)
+        equartType = np.std(evaluate_results)
+
+        print(f"\n{YELLOW}Test d'évaluation du modèle :{RESET}")
+        print(f"  Nombre de fonctions évaluées : {nbFilesEvaluating}")
+        print(f"  Nombre maximum de tokens : {maxTokenNumber}")
+        print(f"  Nombre moyen d'erreurs : {moyenne}")
+        print(f"  Ecart-type : {equartType}")
+        print(f"  Nombre minimal d'erreurs : {min(evaluate_results)}")
+        print(f"  Nombre maximal d'erreurs : {max(evaluate_results)}")
